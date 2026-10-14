@@ -1,0 +1,23 @@
+{
+  "name": "tfas-viewer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser-based viewer for Tfas (.tfs) drawings, built from a reverse-engineered file format",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "check": "node scripts/check.ts resources resources/test",
+    "svg": "node scripts/tfs2svg.ts"
+  },
+  "dependencies": {
+    "fflate": "0.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "typescript": "5.8.3",
+    "vite": "6.3.5"
+  }
+}

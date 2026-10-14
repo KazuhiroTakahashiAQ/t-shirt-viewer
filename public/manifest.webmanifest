@@ -1,0 +1,28 @@
+{
+  "name": "Tfas Viewer",
+  "short_name": "Tfas Viewer",
+  "description": "Tfas の図面 (.tfs) と部品ライブラリを表示するビューア (閲覧専用)",
+  "lang": "ja",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f0f0f0",
+  "theme_color": "#1a4f8a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": {
+        "application/x-tfas": [".tfs"],
+        "application/x-tfas-parts": [".ncp", ".mdb", ".usr"]
+      }
+    }
+  ],
+  "launch_handler": { "client_mode": "focus-existing" }
+}

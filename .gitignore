@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# sample drawings, parts libraries and manuals (never committed)
+resources/
+
+# local analysis notes (kept on this machine only)
+docs/FINDINGS.md
+docs/KNOWN_ISSUES.md
+
+# local Claude Code settings
+.claude/settings.local.json

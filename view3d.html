@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>3D - Tfas Viewer</title>
+    <meta name="theme-color" content="#1a4f8a" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/src/app/style.css" />
+  </head>
+  <body class="popup3d">
+    <header class="popup-bar">
+      <strong id="popup-title">3D</strong>
+      <select id="popup-layout" title="画面分割">
+        <option value="3d">3D</option>
+        <option value="trio">3D＋正面＋右側面</option>
+        <option value="quad">3D＋正面＋背面＋右側面</option>
+        <option value="elev">正面＋背面＋右側面＋左側面</option>
+      </select>
+      <button id="popup-reset" class="mini">並びを戻す</button>
+      <span id="popup-status" class="muted"></span>
+    </header>
+    <div class="panes" id="panes"></div>
+    <div id="popup-empty" class="popup-empty">元のウィンドウから図面を受け取っています…</div>
+    <script type="module" src="/src/app/popup3d.ts"></script>
+  </body>
+</html>
