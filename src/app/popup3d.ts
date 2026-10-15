@@ -272,7 +272,7 @@ window.addEventListener('keydown', (e) => {
 })
 
 if (opener) send({ type: 'ready' })
-else empty.textContent = 'このページは Tfas Viewer の［3D］－［3D を別ウィンドウで表示］から開いてください'
+else empty.textContent = 'このページは T-Shirt Viewer の［3D］－［3D を別ウィンドウで表示］から開いてください'
 
 // expose internals for debugging in development builds
 if (import.meta.env.DEV) Object.assign(window, { __tfas3d: viewer })

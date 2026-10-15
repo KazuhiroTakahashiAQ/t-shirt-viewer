@@ -178,6 +178,66 @@ select {
   font-weight: 700;
 }
 
+/* 最近開いたファイル: name and folder path on two lines */
+.menu-items button.recent-item {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  max-width: 420px;
+}
+
+.recent-item .recent-path {
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty-recent {
+  pointer-events: auto;
+  margin-top: 18px;
+}
+
+.recent-list {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 260px;
+  max-width: min(520px, 90vw);
+  max-height: 40vh;
+  overflow: auto;
+  text-align: left;
+}
+
+.recent-list .recent-item {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 10px;
+  border: 1px solid #44505c;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e6ebf0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.recent-list .recent-item:hover {
+  background: rgba(110, 163, 221, 0.25);
+}
+
+.recent-list .recent-path {
+  color: #9aa6b2;
+}
+
+.recent-item .recent-name,
+.recent-item .recent-path {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
 .menu-empty {
   display: block;
   padding: 3px 26px;

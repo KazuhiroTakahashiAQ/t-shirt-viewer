@@ -13,6 +13,7 @@ import { initParts, isPartsFile, onOpenPart, openPartsFiles } from './parts.ts'
 import { Picker, type Snap } from './pick.ts'
 import { printSvg } from './print.ts'
 import { initPwa, promptInstall } from './pwa.ts'
+import { forget, forgetAll, recentList, recentPath, recentSupported, remember, reopen, walkFolder, type RecentItem } from './recent.ts'
 import { VIEW_PRESETS, Viewer3D, type Pane, type PaneKind, type SectionBox, type ViewPreset } from './viewer3d.ts'
 import type { Model3D } from '../tfas/model3d.ts'
 
@@ -56,6 +57,8 @@ const contextMenu = $<HTMLDivElement>('context-menu')
 const docTitle = $<HTMLDivElement>('doc-title')
 
 const options: RenderOptions = { ...defaultOptions }
+/** apply the sheets' 単色指定 / グレー表示 (off: every sheet in its figures' own colors) */
+let sheetColors = true
 const renderer = new CanvasRenderer(canvas, options)
 renderer.onRendered = (ms) => {
   stTime.textContent = `描画 ${ms.toFixed(0)} ms`
@@ -87,6 +90,19 @@ interface Entry {
   model3dReady?: Model3D
   /** a part from a parts library shown in the drawing area (no .tfs data, no 3D) */
   part?: boolean
+  /** where the file came from, to remember it in 最近開いたファイル (Chrome / Edge) */
+  handle?: FileSystemFileHandle
+  dir?: FileSystemDirectoryHandle | null
+  /** folder path when it was taken from a folder (folder name first) */
+  path?: string[]
+}
+
+/** A file to open, with its handle when the browser gave one. */
+interface Picked {
+  file: File
+  handle?: FileSystemFileHandle
+  dir?: FileSystemDirectoryHandle | null
+  path?: string[]
 }
 
 const library = new Map<string, Entry>()
@@ -146,9 +162,12 @@ function refreshFileLists(currentKey: string) {
   )
 }
 
-async function addFiles(files: File[]) {
+/** Open files; `openName`: the drawing to show (otherwise the one no other file refers to). */
+async function addFiles(input: (File | Picked)[], openName?: string) {
+  const items = input.map((x): Picked => (x instanceof File ? { file: x } : x))
+  const files = items.map((p) => p.file)
   const parts = files.filter((f) => isPartsFile(f.name))
-  const tfs = files.filter((f) => /\.tfs$/i.test(f.name))
+  const tfs = items.filter((p) => /\.tfs$/i.test(p.file.name))
   if (parts.length) {
     await openPartsFiles(parts)
     if (!tfs.length) {
@@ -160,7 +179,7 @@ async function addFiles(files: File[]) {
     alert('.tfs ファイル (または部品ライブラリ .NCP / .MDB / .USR) が含まれていません')
     return
   }
-  const added = tfs.map((f) => addEntry(f.name, () => f.arrayBuffer()))
+  const added = tfs.map((p) => Object.assign(addEntry(p.file.name, () => p.file.arrayBuffer()), { handle: p.handle, dir: p.dir, path: p.path }))
   // Open the drawing among the added files, not a frame file it references. When only
   // frame files for the current drawing were added, reopen the current drawing with them.
   const referenced = new Set<string>()
@@ -181,7 +200,8 @@ async function addFiles(files: File[]) {
       setBusy(false)
     }
   }
-  const main = added.find((e) => !referenced.has(e.key)) ?? (current ? library.get(current.entry.key) : undefined) ?? added[0]
+  const wanted = openName ? added.find((e) => e.key === normName(openName)) : undefined
+  const main = wanted ?? added.find((e) => !referenced.has(e.key)) ?? (current ? library.get(current.entry.key) : undefined) ?? added[0]
   await openEntry(main)
 }
 
@@ -770,9 +790,10 @@ async function openEntry(entry: Entry) {
     renderLayouts()
     // Tfas opens a drawing on the layout that holds the current sheet; the 3D windows show the model
     showView(layout === 'plan' ? currentLayout(doc) : null, cur >= 0 ? cur : undefined)
-    document.title = `${entry.name} - Tfas Viewer`
+    document.title = `${entry.name} - T-Shirt Viewer`
     docTitle.textContent = entry.name
-    setHint()
+    setHint(monoShare() >= 0.5 ? MONO_HINT : undefined)
+    void rememberEntry(entry)
     sync3d()
     void sendPopupFile()
   } catch (e) {
@@ -804,6 +825,7 @@ function sync3d() {
 
 /** Display color mode of a sheet: 単色指定 applies unless it is the current sheet. */
 function sheetColorMode(i: number): LayerColor {
+  if (!sheetColors) return { mode: 'entity', color: 0 }
   const l = current!.doc.layers[i]
   if (l.color.mode === 'gray') return l.color
   if (l.monoColor && i !== current!.currentSheet) return { mode: 'layer', color: l.monoColor }
@@ -1049,6 +1071,21 @@ function renderLayers() {
     items.push(li)
   }
   layerList.replaceChildren(...items)
+}
+
+const MONO_HINT = 'この図面は多くのシートが「単色指定」(1 色で表示する設定) か「グレー表示」で保存されているため、Tfas と同じく白・灰色で表示しています。ツールバーの「単色指定」を外すと、図形の本来の色で表示します。'
+
+/** Share of the shown figures drawn in a sheet's single color or gray. */
+function monoShare(): number {
+  if (!current) return 0
+  let all = 0
+  let mono = 0
+  for (const s of current.sheets) {
+    if (!current.visible[s.index]) continue
+    all += s.geom.count
+    if (s.color.mode !== 'entity') mono += s.geom.count
+  }
+  return all ? mono / all : 0
 }
 
 /** Recompute colors after the current sheet changed (単色指定 skips the current sheet). */
@@ -1950,8 +1987,12 @@ function canvasMenu(x: number, y: number) {
 }
 
 const commands: Record<string, () => void> = {
-  open: () => fileInput.click(),
-  'open-folder': () => folderInput.click(),
+  open: () => void pickFiles(),
+  'open-folder': () => void pickFolder(),
+  'recent-clear': async () => {
+    await forgetAll()
+    void renderRecent()
+  },
   print: printRange,
   'export-svg': exportSvg,
   'export-png': exportPng,
@@ -2034,6 +2075,11 @@ const OPTION_SETTERS: Record<string, (on: boolean) => void> = {
   text: (on) => (options.showText = on),
   aux: (on) => (options.showAux = on),
   sheets: (on) => (options.showSheets = on),
+  sheetcolor: (on) => {
+    sheetColors = on
+    refreshColors()
+    setHint()
+  },
 }
 document.querySelectorAll<HTMLInputElement>('[data-opt]').forEach((el) =>
   el.addEventListener('change', () => {
@@ -2469,6 +2515,27 @@ window.addEventListener('drop', async (e) => {
   e.preventDefault()
   document.body.classList.remove('dragover')
   if (!e.dataTransfer) return
+  // handles (Chrome / Edge) let 最近開いたファイル open the files again; they must be
+  // requested before the first await, while the dropped data is still readable
+  type HandleItem = DataTransferItem & { getAsFileSystemHandle?: () => Promise<FileSystemHandle | null> }
+  const items = [...e.dataTransfer.items].filter((i) => i.kind === 'file') as HandleItem[]
+  if (recentSupported && items.length && items.every((i) => i.getAsFileSystemHandle)) {
+    const pending = items.map((i) => i.getAsFileSystemHandle!())
+    try {
+      const picked: Picked[] = []
+      for (const h of await Promise.all(pending)) {
+        if (!h) continue
+        if (h.kind === 'directory') {
+          const dir = h as FileSystemDirectoryHandle
+          for (const f of await walkFolder(dir)) picked.push({ ...f, dir })
+        } else picked.push({ file: await (h as FileSystemFileHandle).getFile(), handle: h as FileSystemFileHandle })
+      }
+      if (picked.length) addFiles(picked)
+      return
+    } catch {
+      // fall back to the dropped files themselves
+    }
+  }
   const files = await collectDropped(e.dataTransfer)
   if (files.length) addFiles(files)
 })
@@ -2513,6 +2580,101 @@ initPwa({
   },
 })
 
+// ---------------------------------------------------------------------------
+// 最近開いたファイル
+
+type FilePickerWindow = Window & {
+  showOpenFilePicker(o: object): Promise<FileSystemFileHandle[]>
+  showDirectoryPicker(o: object): Promise<FileSystemDirectoryHandle>
+}
+const ACCEPT = [{ description: 'Tfas の図面・部品ライブラリ', accept: { 'application/octet-stream': ['.tfs', '.ncp', '.mdb', '.usr'] } }]
+
+/** ［開く］: the browser's file dialog with handles where available (remembered), else the file input. */
+async function pickFiles() {
+  if (!recentSupported) return fileInput.click()
+  let handles: FileSystemFileHandle[]
+  try {
+    handles = await (window as unknown as FilePickerWindow).showOpenFilePicker({ id: 'drawings', multiple: true, types: ACCEPT })
+  } catch (e) {
+    if ((e as Error).name !== 'AbortError') fileInput.click()
+    return
+  }
+  addFiles(await Promise.all(handles.map(async (h) => ({ file: await h.getFile(), handle: h }))))
+}
+
+/** ［フォルダを開く］: with the folder's handle where available (paths are remembered). */
+async function pickFolder() {
+  if (!recentSupported || !('showDirectoryPicker' in window)) return folderInput.click()
+  let dir: FileSystemDirectoryHandle
+  try {
+    dir = await (window as unknown as FilePickerWindow).showDirectoryPicker({ id: 'drawings', mode: 'read' })
+  } catch (e) {
+    if ((e as Error).name !== 'AbortError') folderInput.click()
+    return
+  }
+  setBusy(true, 'フォルダを読み込み中…')
+  let found: Awaited<ReturnType<typeof walkFolder>>
+  try {
+    found = await walkFolder(dir)
+  } finally {
+    setBusy(false)
+  }
+  if (!found.length) alert(`フォルダ「${dir.name}」に .tfs ファイル (または部品ライブラリ) がありません`)
+  else addFiles(found.map((f) => ({ ...f, dir })))
+}
+
+/** Remember an opened drawing together with the frame files it uses. */
+async function rememberEntry(entry: Entry) {
+  if (!entry.handle || !current || current.entry !== entry) return
+  const others: FileSystemFileHandle[] = []
+  current.doc.layers.forEach((l, i) => {
+    const src = l.xref && current!.xref[i] === 'ok' ? library.get(normName(l.xref.fileName)) : undefined
+    if (src?.handle && !others.includes(src.handle)) others.push(src.handle)
+  })
+  await remember({ name: entry.name, path: entry.path ?? [], file: entry.handle, others, dir: entry.dir ?? null })
+  void renderRecent()
+}
+
+async function openRecent(r: RecentItem) {
+  closeMenus()
+  const res = await reopen(r)
+  if (res === 'denied') {
+    alert(`「${r.name}」を読み取る許可がないため開けませんでした。もう一度選んで「許可」を押すか、［ファイル］－［開く］から選んでください。`)
+    return
+  }
+  if (res === 'missing') {
+    alert(`「${recentPath(r)}」が見つかりません。移動・名前の変更・削除をした可能性があります。一覧から外します。`)
+    await forget(r.id)
+    void renderRecent()
+    return
+  }
+  addFiles([{ file: res.file, handle: r.file, dir: r.dir, path: r.path }, ...res.others.map((o) => ({ ...o, dir: r.dir }))], r.name)
+}
+
+/** The lists in the ファイル menu and on the start screen. */
+async function renderRecent() {
+  const list = await recentList()
+  const button = (r: RecentItem) => {
+    const b = document.createElement('button')
+    b.className = 'recent-item'
+    const name = document.createElement('span')
+    name.className = 'recent-name'
+    name.textContent = r.name
+    const where = document.createElement('span')
+    where.className = 'recent-path'
+    where.textContent = r.path.length ? r.path.join('/') : '(場所は記録されません)'
+    b.append(name, where)
+    b.title = `${recentPath(r)}\nクリックで開きます (一緒に開いた図枠などのファイルも開きます)。初めて開くときやブラウザーを開き直した後は、読み取ってよいかをブラウザーが確認します。${r.path.length ? '' : '\nファイルの場所 (フォルダ) はブラウザーから知ることができないため、［フォルダを開く］で開いた図面だけフォルダ名を表示します。'}`
+    b.addEventListener('click', () => void openRecent(r))
+    return b
+  }
+  const shown = recentSupported && list.length > 0
+  document.querySelectorAll<HTMLElement>('.recent-only').forEach((el) => (el.hidden = !shown))
+  $('menu-recent').replaceChildren(...list.map(button))
+  $('empty-recent-list').replaceChildren(...list.map(button))
+}
+void renderRecent()
+
 initParts($('parts-panel'), { showTab })
 onOpenPart((name, doc) => {
   const entry: Entry = { key: `part:${normName(name)}`, name, read: async () => new ArrayBuffer(0), doc: Promise.resolve(doc), part: true }
@@ -2544,5 +2706,9 @@ if (import.meta.env.DEV)
       },
       run,
       select,
+      addFiles,
+      renderRecent,
+      walkFolder,
+      recentList,
     },
   })

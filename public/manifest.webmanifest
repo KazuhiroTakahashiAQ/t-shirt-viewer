@@ -1,6 +1,6 @@
 {
-  "name": "Tfas Viewer",
-  "short_name": "Tfas Viewer",
+  "name": "T-Shirt Viewer",
+  "short_name": "T-Shirt Viewer",
   "description": "Tfas の図面 (.tfs) と部品ライブラリを表示するビューア (閲覧専用)",
   "lang": "ja",
   "id": "./",

@@ -50,6 +50,10 @@ function precache(): Plugin {
 
 export default defineConfig({
   base: './',
+  // fixed ports: other Vite apps take 5173 and up, and an installed PWA belongs to one origin
+  // (host and port), so the app must always be served at the same address
+  server: { port: 5180, strictPort: true },
+  preview: { port: 5181, strictPort: true },
   worker: { format: 'es' },
   plugins: [precache()],
   build: {

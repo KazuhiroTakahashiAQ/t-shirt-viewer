@@ -15,7 +15,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export interface PwaHooks {
   /** files chosen in the OS with this app */
-  openFiles(files: File[]): void
+  openFiles(files: { file: File; handle: FileSystemFileHandle }[]): void
   /** installing as an app became possible (true) or is no longer offered (false) */
   installable(on: boolean): void
   /** a new version is ready; `apply` switches to it (the page reloads) */
@@ -28,7 +28,7 @@ export function initPwa(hooks: PwaHooks) {
   const queue = (window as unknown as { launchQueue?: LaunchQueue }).launchQueue
   queue?.setConsumer(async (params) => {
     if (!params.files?.length) return
-    hooks.openFiles(await Promise.all(params.files.map((h) => h.getFile())))
+    hooks.openFiles(await Promise.all(params.files.map(async (handle) => ({ file: await handle.getFile(), handle }))))
   })
 
   window.addEventListener('beforeinstallprompt', (e) => {

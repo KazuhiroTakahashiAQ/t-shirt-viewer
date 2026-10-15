@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tfas Viewer</title>
+    <title>T-Shirt Viewer</title>
     <meta name="theme-color" content="#1e6b4f" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -17,6 +17,10 @@
         <div class="menu-items">
           <button data-cmd="open">開く…<kbd>Ctrl+O</kbd></button>
           <button data-cmd="open-folder">フォルダを開く…</button>
+          <hr class="recent-only" hidden />
+          <div class="menu-label recent-only" hidden>最近開いたファイル</div>
+          <div id="menu-recent" class="menu-files menu-recent recent-only" hidden></div>
+          <button data-cmd="recent-clear" class="recent-only" hidden>最近開いたファイルの一覧を消去</button>
           <hr />
           <button data-cmd="print" data-needs-doc>印刷…<kbd>Ctrl+P</kbd></button>
           <button data-cmd="export-svg" data-needs-doc>SVG 保存 (表示範囲)</button>
@@ -37,6 +41,7 @@
           <button data-cmd="zoom-out" data-needs-doc>縮小<kbd>−</kbd></button>
           <hr />
           <label class="check"><input type="checkbox" data-opt="color" checked />カラー表示</label>
+          <label class="check"><input type="checkbox" data-opt="sheetcolor" checked />シートの単色指定・グレー表示を反映</label>
           <label class="check"><input type="checkbox" data-opt="black" checked />黒背景</label>
           <label class="check"><input type="checkbox" data-opt="weight" checked />線幅表示</label>
           <label class="check"><input type="checkbox" data-opt="text" checked />文字</label>
@@ -102,7 +107,7 @@
           <button data-cmd="install" hidden>アプリとしてインストール…</button>
         </div>
       </div>
-      <div class="doc-title" id="doc-title">Tfas Viewer</div>
+      <div class="doc-title" id="doc-title">T-Shirt Viewer</div>
     </nav>
 
     <header class="toolbar">
@@ -189,6 +194,7 @@
       </div>
       <div class="tb-group toggles">
         <label title="Tfas の色で表示 (オフで単色)"><input type="checkbox" data-opt="color" checked />カラー</label>
+        <label><input type="checkbox" data-opt="sheetcolor" checked />単色指定</label>
         <label><input type="checkbox" data-opt="black" checked />黒背景</label>
         <label title="太線を太く表示"><input type="checkbox" data-opt="weight" checked />線幅</label>
         <label><input type="checkbox" data-opt="text" checked />文字</label>
@@ -266,6 +272,10 @@
             <p class="big">または .tfs ファイルをここにドロップ</p>
             <p class="muted">または［ファイル］－［開く］から選択。図枠など外部参照の図面も一緒に開くと合成表示します。</p>
             <p class="muted">部品ライブラリ (.NCP / .MDB / .USR) も同様に開けます。</p>
+            <div class="empty-recent recent-only" hidden>
+              <p class="muted">最近開いたファイル</p>
+              <div id="empty-recent-list" class="recent-list"></div>
+            </div>
           </div>
         </div>
         <div id="busy" class="busy" hidden>読み込み中…</div>
