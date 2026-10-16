@@ -2,6 +2,7 @@
 
 Tfas の図面ファイル (`.tfs`) と部品ライブラリ (サブセットライブラリ: `.NCP` / `.MDB` / `.USR`) をブラウザで表示するビューアです。公開仕様やライブラリが存在しないため、サンプルファイルを解析してファイル形式を独自に読み解いています (解析結果は [docs/FORMAT.md](docs/FORMAT.md)。解析の過程で分かったことのメモと既知の課題は `docs/FINDINGS.md`・`docs/KNOWN_ISSUES.md` として手元にだけ置き、git では管理していません)。
 
+- 公開版: https://kazuhirotakahashiaq.github.io/t-shirt-viewer/ (main への push で GitHub Actions が自動でビルド・配信。アプリとしてインストールも可)
 - インストール不要のブラウザアプリ (ファイルはローカルで解析され、外部へ送信されません)
 - 32bit / 64bit 両方のセクション表形式に対応 (ファイル形式バージョン 3.4〜3.6 で確認)
 - 手元のサンプル 119 図面と部品ライブラリ 2 種 (`resources/` に置く。git 管理外) がすべて読込可能 (`npm run check`)
