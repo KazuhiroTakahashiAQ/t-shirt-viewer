@@ -27,10 +27,10 @@ export const Prim = {
 } as const
 
 export const PrimFlag = {
-  /** auxiliary geometry (construction points, helper lines) that Tfas does not print */
+  /** auxiliary geometry (construction points, helper lines) that the CAD does not print */
   Aux: 1,
   Closed: 2,
-  /** data Tfas keeps for editing but does not display (kind bit 0x40000000) */
+  /** data the CAD keeps for editing but does not display (kind bit 0x40000000) */
   Hidden: 4,
 } as const
 
@@ -44,11 +44,11 @@ export interface GeomBuffer {
   coords: Float64Array
   /** top-level entity of each primitive (index into Layer.entities) */
   entity: Uint32Array
-  /** Tfas レイヤ (図形属性 id) of each primitive */
+  /** レイヤ (図形属性 id) of each primitive */
   attr: Uint32Array
 }
 
-/** A top-level entity (line, text, duct, dimension, part ...) as Tfas selects it. */
+/** A top-level entity (line, text, duct, dimension, part ...) as the CAD selects it. */
 export interface EntityInfo {
   /** entity kind without the aux / hidden bits (0x500 duct or pipe, 0x121 dimension, ...) */
   kind: number
@@ -81,7 +81,7 @@ export interface TextItem {
   bbox: Rect
   /** top-level entity (index into Layer.entities) */
   entity: number
-  /** Tfas レイヤ (図形属性 id) */
+  /** レイヤ (図形属性 id) */
   attr: number
 }
 
@@ -158,14 +158,14 @@ export interface Viewport {
 }
 
 export interface SheetLayout {
-  /** layout id, as in TfasDocument.layouts */
+  /** layout id, as in TfsDocument.layouts */
   layoutId: string
   /** the current sheet of its layout */
   layoutCurrent: boolean
   viewport: Viewport | null
   /** model sheets shown in the viewport (null: all of them) */
   showSheets: string[] | null
-  /** Tfas レイヤ hidden in the viewport */
+  /** レイヤ hidden in the viewport */
   frozenLayers: string[]
 }
 
@@ -181,7 +181,7 @@ export interface TextFunction {
   layouts: Record<string, string>
 }
 
-/** Tfas レイヤ (stored as the 図形属性 table). */
+/** レイヤ (stored as the 図形属性 table). */
 export interface AttributeInfo {
   id: number
   name: string
@@ -197,7 +197,7 @@ export interface Thumbnail {
   rgba: Uint8ClampedArray
 }
 
-export interface TfasDocument {
+export interface TfsDocument {
   fileName: string
   version: string
   /** document scale denominator, e.g. 50 for 1/50 */
@@ -213,7 +213,7 @@ export interface TfasDocument {
   thumbnail: Thumbnail | null
   /** 文字関数 values */
   functions: TextFunction[]
-  /** Tfas レイヤ definitions */
+  /** レイヤ definitions */
   attributes: AttributeInfo[]
   warnings: string[]
   stats: { primitives: number; texts: number; hiddenSkipped: number; parseMs: number }

@@ -6,7 +6,7 @@
 // drawings, not used). Checked against the part outline box 0x506 on the sample drawings,
 // the views map to the part's axes as
 //   平面 (x, y), 正面 (x, z), 背面 (−x, z), 右側面 (y, z), 左側面 (−y, z).
-// Tfas itself shows parts in 3D from 3D data in its parts library, which drawings do not
+// The CAD itself shows parts in 3D from 3D data in its parts library, which drawings do not
 // contain. The estimate here is a visual hull: each view's silhouette (found on a grid by
 // flooding the outside of its lines) is traced into outline polygons, extruded along the
 // viewing direction, and the 0x506 box is cut with these prisms (csg.ts). Recesses that no

@@ -1,7 +1,7 @@
 // Helpers for embedded raster images.
 
 import { zlibSync } from 'fflate'
-import type { ImageItem, Thumbnail } from '../tfas/model.ts'
+import type { ImageItem, Thumbnail } from '../tfs/model.ts'
 
 /** Affine matrix mapping image pixels (u right, v down) onto the item's corners. */
 export function imageMatrix(img: ImageItem, w: number, h: number, map: (x: number, y: number) => [number, number]) {

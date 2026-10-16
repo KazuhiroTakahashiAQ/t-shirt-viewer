@@ -4,7 +4,7 @@
 // it there. 文字関数 `$(name)` in texts are expanded with the values of the shown layout.
 
 import { textBounds } from './geometry.ts'
-import { Prim, type EntityInfo, type GeomBuffer, type ImageItem, type LayerColor, type Rect, type TextItem, type TfasDocument, type Viewport } from './model.ts'
+import { Prim, type EntityInfo, type GeomBuffer, type ImageItem, type LayerColor, type Rect, type TextItem, type TfsDocument, type Viewport } from './model.ts'
 
 /** Sheet content after external references are resolved. */
 export interface SourceSheet {
@@ -155,7 +155,7 @@ export function transformImage(im: ImageItem, m: Affine): ImageItem {
 }
 
 /** Replace `$(name)` with the function value (layout specific when given); empty values stay as written. */
-export function expandFunctions(texts: TextItem[], doc: TfasDocument, layoutId: string | null): TextItem[] {
+export function expandFunctions(texts: TextItem[], doc: TfsDocument, layoutId: string | null): TextItem[] {
   if (!doc.functions.length || !texts.some((t) => t.text.includes('$('))) return texts
   const values = new Map<string, string>()
   for (const f of doc.functions) values.set(f.name, (layoutId && f.layouts[layoutId]) || f.value)
@@ -182,7 +182,7 @@ function geomBox(g: GeomBuffer, texts: TextItem[], images: ImageItem[]): Rect | 
 }
 
 /** The model: every sheet that does not belong to a layout. */
-export function modelPieces(doc: TfasDocument, sources: SourceSheet[]): SheetPiece[] {
+export function modelPieces(doc: TfsDocument, sources: SourceSheet[]): SheetPiece[] {
   return doc.layers
     .filter((l) => !l.layout)
     .map((l) => {
@@ -192,7 +192,7 @@ export function modelPieces(doc: TfasDocument, sources: SourceSheet[]): SheetPie
 }
 
 /** A layout: its sheets' own content and the model regions their viewports show. */
-export function layoutPieces(doc: TfasDocument, layoutId: string, sources: SourceSheet[]): SheetPiece[] {
+export function layoutPieces(doc: TfsDocument, layoutId: string, sources: SourceSheet[]): SheetPiece[] {
   const out: SheetPiece[] = []
   const attrName = new Map(doc.attributes.map((a) => [a.id, a.name]))
   for (const l of doc.layers) {
@@ -246,7 +246,7 @@ export function layoutPieces(doc: TfasDocument, layoutId: string, sources: Sourc
  * Paper area of a layout. The layout's paper size is not known; the viewports (typically
  * one showing the title-block frame across the whole sheet) span it.
  */
-export function layoutPaper(doc: TfasDocument, layoutId: string): Rect {
+export function layoutPaper(doc: TfsDocument, layoutId: string): Rect {
   let r: Rect | null = null
   for (const l of doc.layers) {
     const vp = l.layout?.layoutId === layoutId ? l.layout.viewport : null
@@ -259,7 +259,7 @@ export function layoutPaper(doc: TfasDocument, layoutId: string): Rect {
 }
 
 /** The layout that holds the current sheet (null: the model). */
-export function currentLayout(doc: TfasDocument): string | null {
+export function currentLayout(doc: TfsDocument): string | null {
   const cur = doc.layers.find((l) => l.current)
   return cur?.layout && doc.layouts.some((x) => x.id === cur.layout!.layoutId) ? cur.layout.layoutId : null
 }

@@ -2,15 +2,15 @@
 // usage: node scripts/tfs2svg.ts <in.tfs> [out.svg] [--layout model|current|NAME|N] [--window paper|extents|x0,y0,x1,y1]
 //        [--width px] [--color] [--black] [--aux] [--all-layers]
 // External references are resolved from the input file's directory. By default the
-// layout holding the current sheet is rendered (as Tfas opens the drawing).
+// layout holding the current sheet is rendered (as the CAD opens the drawing).
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { readTfas } from '../src/tfas/reader.ts'
-import { resolveXref } from '../src/tfas/xref.ts'
-import { currentLayout, layoutPaper, layoutPieces, modelPieces, type SourceSheet } from '../src/tfas/layout.ts'
+import { readTfs } from '../src/tfs/reader.ts'
+import { resolveXref } from '../src/tfs/xref.ts'
+import { currentLayout, layoutPaper, layoutPieces, modelPieces, type SourceSheet } from '../src/tfs/layout.ts'
 import { toSvg, type SvgLayer } from '../src/render/svg.ts'
 import { defaultOptions } from '../src/render/style.ts'
-import type { Rect } from '../src/tfas/model.ts'
+import type { Rect } from '../src/tfs/model.ts'
 
 const args = process.argv.slice(2)
 const flag = (n: string) => args.includes(n)
@@ -26,7 +26,7 @@ if (!input) {
   process.exit(2)
 }
 const output = positional[1] ?? input.replace(/\.tfs$/i, '') + '.svg'
-const doc = readTfas(new Uint8Array(readFileSync(input)), basename(input))
+const doc = readTfs(new Uint8Array(readFileSync(input)), basename(input))
 const allLayers = flag('--all-layers')
 
 // resolve external references from the same folder
@@ -41,7 +41,7 @@ const sources: SourceSheet[] = doc.layers.map((l) => {
     console.error(`xref not found: ${l.xref.fileName} (sheet ${l.name})`)
     return s
   }
-  const r = resolveXref(doc, l, readTfas(new Uint8Array(readFileSync(join(dir, name))), name))
+  const r = resolveXref(doc, l, readTfs(new Uint8Array(readFileSync(join(dir, name))), name))
   if (!r) console.error(`xref sheet not found: ${l.xref.fileName}#${l.xref.layerName}`)
   return r ? { ...s, ...r } : s
 })

@@ -1,8 +1,8 @@
 // SVG export. Shares layout rules with the canvas renderer; used by the CLI and by
 // the viewer's "SVG 保存" command.
 
-import { layoutText } from '../tfas/geometry.ts'
-import { Prim, PrimFlag, intersects, type GeomBuffer, type ImageItem, type LayerColor, type Rect, type TextItem, type TfasDocument } from '../tfas/model.ts'
+import { layoutText } from '../tfs/geometry.ts'
+import { Prim, PrimFlag, intersects, type GeomBuffer, type ImageItem, type LayerColor, type Rect, type TextItem, type TfsDocument } from '../tfs/model.ts'
 import { imageDataUri, imageMatrix } from './images.ts'
 import { backgroundColor, dashPattern, fontFamily, layerStroke, linePx, type RenderOptions } from './style.ts'
 
@@ -27,7 +27,7 @@ export interface SvgOptions extends RenderOptions {
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const f = (n: number) => (Math.round(n * 100) / 100).toString()
 
-export function toSvg(doc: TfasDocument, layers: SvgLayer[], o: SvgOptions): string {
+export function toSvg(doc: TfsDocument, layers: SvgLayer[], o: SvgOptions): string {
   const { window: w, widthPx } = o
   const s = widthPx / (w.x1 - w.x0)
   const H = Math.ceil((w.y1 - w.y0) * s)

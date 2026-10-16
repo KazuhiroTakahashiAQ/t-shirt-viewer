@@ -2,12 +2,12 @@
 // answered by id. When the worker dies (e.g. out of memory on a damaged file) its pending
 // requests fail and a fresh worker is started for the next request.
 
-import type { Model3D } from '../tfas/model3d.ts'
-import type { TfasDocument } from '../tfas/model.ts'
+import type { Model3D } from '../tfs/model3d.ts'
+import type { TfsDocument } from '../tfs/model.ts'
 
 interface Reply {
   id: number
-  doc?: TfasDocument
+  doc?: TfsDocument
   model?: Model3D
   error?: string
 }
@@ -43,7 +43,7 @@ export class ParserClient {
   }
 
   /** Parse a drawing ('doc') or build its 3D model ('3d'); the buffer is transferred. */
-  request<T extends TfasDocument | Model3D>(kind: 'doc' | '3d', name: string, buffer: ArrayBuffer): Promise<T> {
+  request<T extends TfsDocument | Model3D>(kind: 'doc' | '3d', name: string, buffer: ArrayBuffer): Promise<T> {
     this.worker ??= this.start()
     const worker = this.worker
     return new Promise<T>((resolve, reject) => {

@@ -12,7 +12,7 @@ const sw = self as unknown as ServiceWorkerGlobalScope
 const FILES = '__PRECACHE_FILES__' as unknown as string[]
 /** hash of the files' contents (replaced at build time) */
 const VERSION = '__PRECACHE_VERSION__'
-const PREFIX = 'tfas-viewer-'
+const PREFIX = 't-shirt-viewer-'
 const CACHE = PREFIX + VERSION
 
 sw.addEventListener('install', (e) => {
@@ -22,7 +22,8 @@ sw.addEventListener('install', (e) => {
 sw.addEventListener('activate', (e) => {
   e.waitUntil(
     (async () => {
-      for (const k of await caches.keys()) if (k.startsWith(PREFIX) && k !== CACHE) await caches.delete(k)
+      // older versions, also under the app's former cache name (`<name>-viewer-<16 hex>`)
+      for (const k of await caches.keys()) if (k !== CACHE && (k.startsWith(PREFIX) || /^t[\w-]*-viewer-[0-9a-f]{16}$/.test(k))) await caches.delete(k)
       await sw.clients.claim()
     })(),
   )

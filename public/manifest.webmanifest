@@ -1,9 +1,8 @@
 {
   "name": "T-Shirt Viewer",
   "short_name": "T-Shirt Viewer",
-  "description": "Tfas の図面 (.tfs) と部品ライブラリを表示するビューア (閲覧専用)",
+  "description": ".tfs 形式の図面と部品ライブラリを表示するビューア (閲覧専用)",
   "lang": "ja",
-  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -19,8 +18,8 @@
     {
       "action": "./",
       "accept": {
-        "application/x-tfas": [".tfs"],
-        "application/x-tfas-parts": [".ncp", ".mdb", ".usr"]
+        "application/x-tfs": [".tfs"],
+        "application/x-tfs-parts": [".ncp", ".mdb", ".usr"]
       }
     }
   ],

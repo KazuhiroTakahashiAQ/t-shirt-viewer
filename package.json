@@ -1,9 +1,9 @@
 {
-  "name": "tfas-viewer",
+  "name": "t-shirt-viewer",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Browser-based viewer for Tfas (.tfs) drawings, built from a reverse-engineered file format",
+  "description": "Browser-based viewer for .tfs drawings, built from a reverse-engineered file format",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

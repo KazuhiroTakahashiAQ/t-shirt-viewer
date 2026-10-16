@@ -1,6 +1,6 @@
 // Raster playback of Windows metafiles (EMF / WMF) found in OLE presentation data.
 //
-// Pictures pasted into Tfas (screenshots, photos, icons) are stored as metafiles that
+// Pictures pasted into the CAD (screenshots, photos, icons) are stored as metafiles that
 // only blit bitmaps: StretchDIBits, often as a mask + image pair combined with raster
 // operations for transparency. This player executes those bitmap records into one RGBA
 // image. Vector records (lines, text, fills) are counted as skipped.

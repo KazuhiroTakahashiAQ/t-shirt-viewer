@@ -2,7 +2,7 @@
 // objects were identified from the sample drawings (which drawings use them, what they
 // contain); the ones marked 推定 are educated guesses.
 
-import { Prim, PrimFlag, type GeomBuffer, type ImageItem, type Rect, type TextItem, type TfasDocument } from '../tfas/model.ts'
+import { Prim, PrimFlag, type GeomBuffer, type ImageItem, type Rect, type TextItem, type TfsDocument } from '../tfs/model.ts'
 import { primLength } from './pick.ts'
 
 const NAMES: Record<number, string> = {
@@ -38,7 +38,7 @@ const NAMES: Record<number, string> = {
   0x650: '機器 推定',
 }
 
-/** レイヤグループ numbers as shown by Tfas (layer set number + 1). */
+/** レイヤグループ numbers as shown by the CAD (layer set number + 1). */
 export const LAYER_GROUPS: Record<number, string> = { 1: '基本', 2: '建築', 3: 'グループ3', 4: '電気', 5: '空調', 6: '衛生' }
 
 export function kindName(kind: number): string {
@@ -102,14 +102,14 @@ export function entityParts(geom: GeomBuffer, texts: TextItem[], images: ImageIt
 const num = (n: number, d = 1) => n.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: 0 })
 
 /** Property rows (label, value) for the panel. */
-export function entityProperties(doc: TfasDocument, layerIndex: number, geom: GeomBuffer, entity: number, parts: EntityParts): [string, string][] {
+export function entityProperties(doc: TfsDocument, layerIndex: number, geom: GeomBuffer, entity: number, parts: EntityParts): [string, string][] {
   const layer = doc.layers[layerIndex]
   const info = layer.entities[entity]
   const rows: [string, string][] = []
   const kind = info?.kind ?? 0
   rows.push(['種別', `${kindName(kind)}  (${kindCode(kind)})`])
   rows.push(['シート', `${layer.name || `(${layerIndex})`}  1/${layer.scale}`])
-  // Tfas レイヤ (stored as the 図形属性 table) and its レイヤグループ
+  // レイヤ (stored as the 図形属性 table) and its レイヤグループ
   const attrId = parts.prims.length ? geom.attr[parts.prims[0]] : parts.texts[0]?.attr
   const attr = attrId !== undefined ? doc.attributes.find((x) => x.id === attrId) : undefined
   if (attr) rows.push(['レイヤ', `${attr.name || '(名称なし)'}  (${LAYER_GROUPS[attr.group] ?? `グループ ${attr.group}`})`])

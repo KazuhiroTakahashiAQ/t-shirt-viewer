@@ -1,4 +1,4 @@
-// Embedded OLE objects (entity kind 0x160). Record 0x0007 holds a 24-byte Tfas header
+// Embedded OLE objects (entity kind 0x160). Record 0x0007 holds a 24-byte header
 // followed by the object's compound file. What is drawn is the object's cached
 // presentation, looked up in this order:
 //   CONTENTS     static pictures ("Picture (Enhanced Metafile)" etc.): EMF / WMF / BMP

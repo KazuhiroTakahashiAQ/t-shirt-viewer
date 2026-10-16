@@ -24,7 +24,7 @@ export interface RecentItem {
   dir: FileSystemDirectoryHandle | null
 }
 
-const DB = 'tfas-viewer'
+const DB = 't-shirt-viewer'
 const STORE = 'recent'
 const MAX = 10
 

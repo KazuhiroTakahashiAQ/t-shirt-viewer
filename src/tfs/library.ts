@@ -1,11 +1,11 @@
-// Tfas parts libraries ("サブセットライブラリ" folders imported with
+// Parts libraries ("サブセットライブラリ" folders imported with
 // サブセットライブラリのインポート処理). Two kinds are known:
 //
 //   NCP library (a maker's parts, folder like <maker>_buhin_All): xxxNNNNN.NCP drawings + .MDB catalog
 //       (+ .USR user attributes for electrical parts)
 //   custom desk (カスタムデスク, folder like <company>_buhin_CustomDesk): .MDB catalog + .USR
-//       only. Parts refer to a stock part of Tfas itself (ストックキーコード) whose
-//       shape Tfas generates, so the files hold no geometry; the only
+//       only. Parts refer to a stock part of the CAD itself (ストックキーコード) whose
+//       shape the CAD generates, so the files hold no geometry; the only
 //       drawing is the small EMF icon in イメージテーブル.
 //
 // MDB tables:
@@ -57,7 +57,7 @@ export interface LibraryPart {
   seq: number
   /** category names from the library title down */
   path: string[]
-  /** stock part of Tfas that generates the shape (custom desk libraries) */
+  /** stock part of the CAD that generates the shape (custom desk libraries) */
   stockKey: string | null
   views: LibraryView[]
   specs: LibrarySpec[]
@@ -215,7 +215,7 @@ export function openPartsLibrary(files: LibraryFile[]): PartsLibrary {
   }
   if (ncp && noGeometry) warnings.push(`${noGeometry} 個の部品は NCP に図形がありません`)
   if (!ncp && parts.some((p) => p.stockKey)) {
-    warnings.push('カスタムデスクのライブラリです。部品の形状は Tfas 本体のストック部品から生成されるためファイルに含まれず、登録されたイメージのみ表示します。')
+    warnings.push('カスタムデスクのライブラリです。部品の形状は元の CAD 本体のストック部品から生成されるためファイルに含まれず、登録されたイメージのみ表示します。')
   }
 
   // sort and fill paths
@@ -321,7 +321,7 @@ const ATTR_LABELS: Record<string, string> = {
   power_source: '電源',
   layer: 'レイヤ',
 }
-// values seen in the Tfas manual's sample (境界中心 / 天井面 / 材料拾いする = 1)
+// values seen in the manual's sample (境界中心 / 天井面 / 材料拾いする = 1)
 const ATTR_VALUES: Record<string, Record<number, string>> = {
   hikidashi: { 1: '境界中心' },
   torituke: { 1: '天井面' },
@@ -340,7 +340,7 @@ function attrSpecs(r: Record<string, MdbValue>): LibrarySpec[] {
 }
 
 // ---------------------------------------------------------------------------------
-// EMF previews: Tfas stores small vector icons (pens + POLYLINE16 etc.). They are
+// EMF previews: the CAD stores small vector icons (pens + POLYLINE16 etc.). They are
 // converted to the same flat geometry as part drawings (device units, y up).
 
 const STOCK_PEN_WHITE = 0x80000006
@@ -536,12 +536,12 @@ export function emfDrawing(emf: Uint8Array, code: string, name: string): PartDra
   }
 }
 
-/** PS_DASH .. PS_DASHDOTDOT -> Tfas built-in line types (2 破線, 3 点線, 4 一点鎖線, 5 二点鎖線). */
+/** PS_DASH .. PS_DASHDOTDOT -> built-in line types (2 破線, 3 点線, 4 一点鎖線, 5 二点鎖線). */
 function penLinetype(style: number): number {
   return [1, 2, 3, 4, 5][style & 0xf] ?? 1
 }
 
-// COLORREF (0x00BBGGRR) -> nearest Tfas base color number; near-white and black map to 1,
+// COLORREF (0x00BBGGRR) -> nearest base color number; near-white and black map to 1,
 // the foreground color of the drawing.
 const BASE_COLORS: [number, number, number, number][] = [
   [3, 255, 0, 0],

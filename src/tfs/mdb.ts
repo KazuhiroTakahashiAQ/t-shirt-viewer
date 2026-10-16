@@ -1,5 +1,5 @@
 // Minimal read-only reader for Microsoft Jet 4 (Access 2000-2003 .mdb) databases, enough
-// for the catalogs Tfas uses for parts libraries (サブセット, 型式名称, 仕様属性, イメージテーブル).
+// for the catalogs the CAD uses for parts libraries (サブセット, 型式名称, 仕様属性, イメージテーブル).
 //
 // Jet 4 basics (4096-byte pages, little endian):
 //   page 0      database definition ("Standard Jet DB", version byte at 0x14: 1 = Jet 4)

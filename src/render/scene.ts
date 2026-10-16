@@ -2,7 +2,7 @@
 // style and spatial tile into Path2D objects. Paths are stored relative to the tile
 // origin so large model coordinates do not lose precision at high zoom.
 
-import { Prim, PrimFlag, type GeomBuffer, type ImageItem, type LayerColor, type Rect, type TextItem } from '../tfas/model.ts'
+import { Prim, PrimFlag, type GeomBuffer, type ImageItem, type LayerColor, type Rect, type TextItem } from '../tfs/model.ts'
 
 export interface Batch {
   style: number

@@ -1,9 +1,9 @@
-// The 3D / elevation / section views in a separate browser window (Tfas: 3D 画面の
+// The 3D / elevation / section views in a separate browser window (元の CAD: 3D 画面の
 // ウィンドウの位置「フレーム外」). The main window sends the drawing and keeps sheet
 // visibility, the section range, options, selection and 2D linking in sync.
 
-import type { Model3D } from '../tfas/model3d.ts'
-import type { TfasDocument } from '../tfas/model.ts'
+import type { Model3D } from '../tfs/model3d.ts'
+import type { TfsDocument } from '../tfs/model.ts'
 import { OPT3D_TIPS, PANE_TIPS } from './help.ts'
 import { PaneGrid } from './pane-grid.ts'
 import { ParserClient } from './parser-client.ts'
@@ -18,13 +18,13 @@ const empty = $<HTMLDivElement>('popup-empty')
 
 const LAYOUTS: Record<string, PaneKind[]> = { '3d': ['3d'], trio: ['3d', 'front', 'right'], quad: ['3d', 'front', 'back', 'right'], elev: ['front', 'back', 'right', 'left'] }
 /** window order and sizes (dragging the borders and title bars) */
-const grid = new PaneGrid(panesEl, 'tfas-viewer.popup-pane-split', { split: PANE_TIPS.split, head: PANE_TIPS.headPopup })
+const grid = new PaneGrid(panesEl, 't-shirt-viewer.popup-pane-split', { split: PANE_TIPS.split, head: PANE_TIPS.headPopup })
 
 const opener = window.opener as Window | null
 const send = (m: object) => opener && !opener.closed && opener.postMessage(m, location.origin)
 
 const parser = new ParserClient()
-const request = <T extends TfasDocument | Model3D>(kind: 'doc' | '3d', name: string, buffer: ArrayBuffer) => parser.request<T>(kind, name, buffer)
+const request = <T extends TfsDocument | Model3D>(kind: 'doc' | '3d', name: string, buffer: ArrayBuffer) => parser.request<T>(kind, name, buffer)
 
 let viewer: Viewer3D
 try {
@@ -202,7 +202,7 @@ async function load(m: FileMessage) {
   empty.hidden = false
   empty.textContent = '3D データを作成中…'
   try {
-    const [doc, model] = await Promise.all([request<TfasDocument>('doc', m.name, m.buffer.slice(0)), request<Model3D>('3d', m.name, m.buffer)])
+    const [doc, model] = await Promise.all([request<TfsDocument>('doc', m.name, m.buffer.slice(0)), request<Model3D>('3d', m.name, m.buffer)])
     if (gen !== loadGen) return
     viewer.hiddenLayers = new Set(state.hiddenLayers)
     viewer.setOptions(state.options)
@@ -275,4 +275,4 @@ if (opener) send({ type: 'ready' })
 else empty.textContent = 'このページは T-Shirt Viewer の［3D］－［3D を別ウィンドウで表示］から開いてください'
 
 // expose internals for debugging in development builds
-if (import.meta.env.DEV) Object.assign(window, { __tfas3d: viewer })
+if (import.meta.env.DEV) Object.assign(window, { __app3d: viewer })

@@ -1,14 +1,14 @@
-// Parts library browser (Tfas サブセットライブラリ: maker NCP + MDB, custom desk MDB +
+// Parts library browser (サブセットライブラリ: maker NCP + MDB, custom desk MDB +
 // USR). Parts are listed by category; the selected part is previewed per view (平面,
 // 正面, 背面, 右側面, 左側面) or as a 3D model, and can be opened in the drawing area
-// as a document with the views arranged like Tfas' 5 面図 registration frame.
+// as a document with the views arranged like the CAD's 5 面図 registration frame.
 
 import { CanvasRenderer } from '../render/canvas.ts'
 import { buildLayerBatches } from '../render/scene.ts'
 import { defaultOptions } from '../render/style.ts'
-import { openPartsLibrary, readLibraryModel, readLibraryView, viewName, type LibraryCategory, type LibraryPart, type PartsLibrary } from '../tfas/library.ts'
-import { Prim, unionRect, type GeomBuffer, type Layer, type Rect, type Style, type TextItem, type TfasDocument } from '../tfas/model.ts'
-import { partDocument, type PartDrawing, type PartModel } from '../tfas/ncp.ts'
+import { openPartsLibrary, readLibraryModel, readLibraryView, viewName, type LibraryCategory, type LibraryPart, type PartsLibrary } from '../tfs/library.ts'
+import { Prim, unionRect, type GeomBuffer, type Layer, type Rect, type Style, type TextItem, type TfsDocument } from '../tfs/model.ts'
+import { partDocument, type PartDrawing, type PartModel } from '../tfs/ncp.ts'
 
 export interface PartsHost {
   showTab: (name: string) => void
@@ -16,7 +16,7 @@ export interface PartsHost {
 
 let host: PartsHost
 let root: HTMLElement
-let onOpen: ((name: string, doc: TfasDocument) => void) | null = null
+let onOpen: ((name: string, doc: TfsDocument) => void) | null = null
 const libraries: PartsLibrary[] = []
 let lib: PartsLibrary | null = null
 let selected: LibraryPart | null = null
@@ -36,7 +36,7 @@ export function initParts(el: HTMLElement, h: PartsHost) {
 }
 
 /** Called by the viewer to open a part document in the drawing area. */
-export function onOpenPart(cb: (name: string, doc: TfasDocument) => void) {
+export function onOpenPart(cb: (name: string, doc: TfsDocument) => void) {
   onOpen = cb
 }
 
@@ -71,7 +71,7 @@ function specTip(k: string): string {
     [/^型番/, '型番: メーカーの製品の型式 (品番)。'],
     [/^名称/, '名称: 部品の名前。'],
     [/^分類/, '分類: 部品ライブラリ内の分類 (大分類 / 中分類 / 小分類)。'],
-    [/^部品コード/, '部品コード: Tfas が部品を識別するコード。'],
+    [/^部品コード/, '部品コード: 元の CAD が部品を識別するコード。'],
     [/^メーカーコード/, 'メーカーコード: メーカーを表すコード。'],
     [/^登録日/, '登録日: 部品データが登録された日付。'],
     [/^冷房能力/, '冷房能力: 冷やす能力 (kW)。電源周波数 (50Hz / 60Hz) で値が異なります。'],
@@ -90,7 +90,7 @@ const VIEW_DIRECTIONS: Record<string, string> = { 平面: '上から', 正面: '
 function render() {
   if (!root) return
   const openBtn = text('button', 'btn', '部品ライブラリを開く…')
-  openBtn.title = '部品ライブラリを開く\nメーカーが配布する部品データ (Tfas 用のサブセットライブラリ: .NCP / .MDB / .USR が入ったフォルダー) を選びます。'
+  openBtn.title = '部品ライブラリを開く\nメーカーが配布する部品データ (元の CAD 用のサブセットライブラリ: .NCP / .MDB / .USR が入ったフォルダー) を選びます。'
   openBtn.addEventListener('click', () => document.getElementById('folder-input')?.click())
   const fileBtn = text('button', 'link', 'ファイルを選択')
   fileBtn.title = 'フォルダーではなく、部品データのファイル (.NCP / .MDB / .USR) を個別に選びます。'
@@ -98,7 +98,7 @@ function render() {
   if (!lib) {
     root.replaceChildren(
       openBtn,
-      text('p', 'hint', 'Tfas の部品データフォルダー (サブセットライブラリ: .NCP / .MDB / .USR) を選ぶか、ファイルを画面にドロップしてください。'),
+      text('p', 'hint', '元の CAD の部品データフォルダー (サブセットライブラリ: .NCP / .MDB / .USR) を選ぶか、ファイルを画面にドロップしてください。'),
       fileBtn,
     )
     return
@@ -232,7 +232,7 @@ function renderDetail() {
   open.disabled = !p.views.length
   const children: HTMLElement[] = [head, name, views, previewCanvas, open]
   if (p.stockKey && lib.kind === 'custom-desk')
-    children.push(text('p', 'hint', `形状は Tfas 本体のストック部品 (${p.stockKey}) から生成されるため、このデータには含まれていません。登録されているアイコンを表示しています。`))
+    children.push(text('p', 'hint', `形状は元の CAD 本体のストック部品 (${p.stockKey}) から生成されるため、このデータには含まれていません。登録されているアイコンを表示しています。`))
   const specs = [...p.specs]
   const table = document.createElement('table')
   table.className = 'prop-table'
@@ -432,7 +432,7 @@ function translateGeom(g: GeomBuffer, dx: number, dy: number, styleMap: (i: numb
   return { ...g, coords, styles }
 }
 
-function buildPartDocument(l: PartsLibrary, p: LibraryPart): TfasDocument | null {
+function buildPartDocument(l: PartsLibrary, p: LibraryPart): TfsDocument | null {
   const drawings = new Map<number, PartDrawing>()
   for (const v of p.views) {
     const d = readLibraryView(l, p, v)

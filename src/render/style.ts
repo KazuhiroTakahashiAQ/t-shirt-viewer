@@ -1,7 +1,7 @@
-// Visual style mapping. Tfas keeps its color palette and built-in line type patterns in
+// Visual style mapping. The CAD keeps its color palette and built-in line type patterns in
 // the application, not in the drawing.
 
-import type { LayerColor, TfasDocument } from '../tfas/model.ts'
+import type { LayerColor, TfsDocument } from '../tfs/model.ts'
 
 export type Background = 'white' | 'black'
 export type ColorMode = 'mono' | 'color'
@@ -12,7 +12,7 @@ export interface RenderOptions {
   showAux: boolean
   showText: boolean
   showSheets: boolean
-  /** draw thick pens thicker (screen pixels, like Tfas' 線幅表示) */
+  /** draw thick pens thicker (screen pixels, like the CAD's 線幅表示) */
   lineWeights: boolean
 }
 
@@ -25,9 +25,9 @@ export const defaultOptions: RenderOptions = {
   lineWeights: true,
 }
 
-// Tfas color numbers. 1..30 are the application's base colors (9..14 and 30 are
+// Drawing color numbers. 1..30 are the application's base colors (9..14 and 30 are
 // AutoCAD ACI colors); 31 onwards continue through ACI 10..255 skipping the ACI
-// entries already used as base colors. Derived from the 800x800 previews that Tfas
+// entries already used as base colors. Derived from the 800x800 previews that the CAD
 // stores in the files; 18..29 and user colors beyond the ACI range are unknown.
 const BASE_RGB: Record<number, number> = {
   1: 0xffffff,
@@ -65,8 +65,8 @@ export function aciRgb(n: number): number {
   return (q(r) << 16) | (q(g) << 8) | q(b)
 }
 
-/** RGB of a Tfas color number, or null when unknown (drawn in the foreground color). */
-export function tfasRgb(n: number): number | null {
+/** RGB of a drawing color number, or null when unknown (drawn in the foreground color). */
+export function tfsRgb(n: number): number | null {
   if (n in BASE_RGB) return BASE_RGB[n]
   if (n in BASE_ACI) return aciRgb(BASE_ACI[n])
   if (n >= 31 && n - 31 < ACI_SEQUENCE.length) return aciRgb(ACI_SEQUENCE[n - 31])
@@ -83,7 +83,7 @@ export function strokeColor(color: number, o: RenderOptions): string {
   const fg = o.background === 'white' ? '#000000' : '#ffffff'
   if (o.colorMode === 'mono') c = fg
   else {
-    const rgb = tfasRgb(color)
+    const rgb = tfsRgb(color)
     c = rgb === null ? fg : o.background === 'white' ? forWhite(rgb) : hex(rgb)
   }
   cache.set(key, c)
@@ -117,7 +117,7 @@ export function backgroundColor(o: RenderOptions): string {
 }
 
 // Built-in line types (paper mm). Ratios measured from the line type samples in the
-// official Tfas manual; the absolute size is unknown and scaled so that the period
+// official manual; the absolute size is unknown and scaled so that the period
 // of 2 (dashed) and 4 (chain) is 4 mm. 6 and up were drawn solid before the manual check.
 // Sample pixel runs (dash, gap, ...): 2: 73 23 / 3: 12 12 / 4: 37 23 13 23 / 6: 70 18 /
 // 7: 70 70 / 8: 142 17 4 17 / 11: 4 16 / 12: 161 16 42 17 / 14: 72 15 6 15 ...
@@ -159,10 +159,10 @@ export function linePx(width: number, o: RenderOptions): number {
   return 2.5
 }
 
-const dashCache = new WeakMap<TfasDocument, Map<number, number[] | null>>()
+const dashCache = new WeakMap<TfsDocument, Map<number, number[] | null>>()
 
 /** Dash pattern in model units for a line type, or null for solid lines. */
-export function dashPattern(doc: TfasDocument, linetype: number): number[] | null {
+export function dashPattern(doc: TfsDocument, linetype: number): number[] | null {
   let m = dashCache.get(doc)
   if (!m) dashCache.set(doc, (m = new Map()))
   let d = m.get(linetype)

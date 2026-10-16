@@ -5,9 +5,9 @@
 // usage: node scripts/check.ts <dir|file>...
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, join } from 'node:path'
-import { isLibraryFile, openPartsLibrary, readLibraryModel, readLibraryView } from '../src/tfas/library.ts'
-import { read3d } from '../src/tfas/model3d.ts'
-import { readTfas } from '../src/tfas/reader.ts'
+import { isLibraryFile, openPartsLibrary, readLibraryModel, readLibraryView } from '../src/tfs/library.ts'
+import { read3d } from '../src/tfs/model3d.ts'
+import { readTfs } from '../src/tfs/reader.ts'
 
 const libraryDirs: string[] = []
 
@@ -36,7 +36,7 @@ const t0 = performance.now()
 for (const f of files) {
   try {
     const data = new Uint8Array(readFileSync(f))
-    const doc = readTfas(data, basename(f))
+    const doc = readTfs(data, basename(f))
     const m3 = read3d(data)
     const n3 = m3.objects.length
     total3d += n3

@@ -1,7 +1,7 @@
 // Hit testing and snapping on the displayed geometry. Each layer (sheet) gets a uniform
 // grid of primitive indices, built on first use.
 
-import { Prim, PrimFlag, type GeomBuffer, type ImageItem, type Rect, type TextItem } from '../tfas/model.ts'
+import { Prim, PrimFlag, type GeomBuffer, type ImageItem, type Rect, type TextItem } from '../tfs/model.ts'
 
 export interface PickLayer {
   index: number

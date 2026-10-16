@@ -1,7 +1,7 @@
 // Parses .tfs files off the main thread and transfers the geometry buffers back.
-// `kind: '3d'` builds the 3D model (src/tfas/model3d.ts) instead of the plan document.
-import { read3d } from '../tfas/model3d.ts'
-import { readTfas } from '../tfas/reader.ts'
+// `kind: '3d'` builds the 3D model (src/tfs/model3d.ts) instead of the plan document.
+import { read3d } from '../tfs/model3d.ts'
+import { readTfs } from '../tfs/reader.ts'
 
 interface Request {
   id: number
@@ -18,7 +18,7 @@ self.onmessage = (e: MessageEvent<Request>) => {
       ;(self as unknown as Worker).postMessage({ id, model }, [model.tri.buffer as ArrayBuffer, model.triNormal.buffer as ArrayBuffer, model.line.buffer as ArrayBuffer])
       return
     }
-    const doc = readTfas(new Uint8Array(buffer), name)
+    const doc = readTfs(new Uint8Array(buffer), name)
     const transfer: ArrayBuffer[] = []
     for (const l of doc.layers) {
       const g = l.geom

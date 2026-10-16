@@ -1,7 +1,7 @@
-// Low-level container layer of the Tfas (.tfs) format.
+// Low-level container layer of the .tfs format.
 //
 // File layout (all little endian):
-//   0x00  "TFAS" magic
+//   0x00  signature: the bytes 54 46 41 53
 //   0x08  u8 major, u8 flags (0x80 = 64-bit section table), u8, u8 minor
 //   0x40  20-byte digest
 //   0x58  section table: 30 entries of (start, end) as i32 pairs (narrow, ends at 0x148)
@@ -34,7 +34,7 @@ export interface RawRecord {
   body: Uint8Array
 }
 
-export class TfasFormatError extends Error {}
+export class TfsFormatError extends Error {}
 
 export function dataView(b: Uint8Array): DataView {
   return new DataView(b.buffer, b.byteOffset, b.byteLength)
@@ -42,7 +42,7 @@ export function dataView(b: Uint8Array): DataView {
 
 export function openContainer(data: Uint8Array): Container {
   if (data.length < 0x148 || data[0] !== 0x54 || data[1] !== 0x46 || data[2] !== 0x41 || data[3] !== 0x53) {
-    throw new TfasFormatError('TFAS ファイルではありません (マジック不一致)')
+    throw new TfsFormatError('.tfs 図面ファイルではありません (先頭のシグネチャが一致しない)')
   }
   const view = dataView(data)
   const wide = (data[9] & 0x80) !== 0

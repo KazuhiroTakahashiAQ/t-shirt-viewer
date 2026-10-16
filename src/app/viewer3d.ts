@@ -1,12 +1,12 @@
 // 3D, elevation and section views of a drawing. Several panes (3D / 正面 / 背面 / 右側面 /
 // 左側面) share one WebGL scene; a section range picked on the plan clips the elevation
-// panes into sections (Tfas クイック断面) and optionally the 3D pane.
+// panes into sections (クイック断面) and optionally the 3D pane.
 
 import { cameraFrame, distanceForUnitsPerPixel, Gl3d, unitsPerPixel, type Camera, type DrawState, type Plane, type SceneBuffers, type SceneGroup, type V3 } from '../render/gl3d.ts'
-import { tfasRgb } from '../render/style.ts'
-import { primSegments } from '../tfas/geometry.ts'
-import { PrimFlag, type TfasDocument } from '../tfas/model.ts'
-import type { Model3D, Object3D } from '../tfas/model3d.ts'
+import { tfsRgb } from '../render/style.ts'
+import { primSegments } from '../tfs/geometry.ts'
+import { PrimFlag, type TfsDocument } from '../tfs/model.ts'
+import type { Model3D, Object3D } from '../tfs/model3d.ts'
 import { PANE_TIPS } from './help.ts'
 
 export type PaneKind = '3d' | 'front' | 'back' | 'right' | 'left'
@@ -117,7 +117,7 @@ export class Pane {
 const hexRgb = (n: number): [number, number, number] => [(n >> 16) & 255, (n >> 8) & 255, n & 255]
 
 function color3d(n: number, bg: 'white' | 'black'): [number, number, number] {
-  const rgb = tfasRgb(n)
+  const rgb = tfsRgb(n)
   if (rgb === null) return bg === 'white' ? [120, 124, 130] : [200, 200, 200]
   const [r, g, b] = hexRgb(rgb)
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
@@ -131,7 +131,7 @@ function highlightColor(bg: 'white' | 'black'): [number, number, number] {
 }
 
 /** Sheets shown in 3D: model sheets that are not layout sheets or external references. */
-export function sheets3d(doc: TfasDocument): number[] {
+export function sheets3d(doc: TfsDocument): number[] {
   return doc.layers.filter((l) => !l.layout && !l.xref).map((l) => l.index)
 }
 
@@ -139,7 +139,7 @@ export function sheets3d(doc: TfasDocument): number[] {
  * Scene buffers for the visible sheets; objects and plan lines on hidden レイヤ are left out.
  * `alt`: objects in their alternative shape (parts estimated from their views).
  */
-function buildScene(model: Model3D, doc: TfasDocument, bg: 'white' | 'black', hidden: Set<number>, alt: boolean): Built {
+function buildScene(model: Model3D, doc: TfsDocument, bg: 'white' | 'black', hidden: Set<number>, alt: boolean): Built {
   const shape = (o: Object3D) => (alt && o.alt ? o.alt : o)
   const include = new Set(sheets3d(doc))
   // origin: the model's, or the plan's center when there are no 3D objects
@@ -327,7 +327,7 @@ export interface Viewer3DEvents {
 export class Viewer3D {
   readonly engine: Gl3d
   model: Model3D | null = null
-  doc: TfasDocument | null = null
+  doc: TfsDocument | null = null
   private built: Built | null = null
   panes: Pane[] = []
   options: Options3D = { translucentMembers: false, showPlan: true, useElevation: true, clip3d: false, partViews: false, background: 'black' }
@@ -355,7 +355,7 @@ export class Viewer3D {
 
   // --- data ----------------------------------------------------------------
 
-  setData(model: Model3D | null, doc: TfasDocument | null) {
+  setData(model: Model3D | null, doc: TfsDocument | null) {
     // offsets belong to the drawing they were adjusted on
     if (doc !== this.doc) for (const p of this.panes) this.resetLinkOffset(p)
     this.model = model

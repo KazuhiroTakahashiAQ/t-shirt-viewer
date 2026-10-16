@@ -1,10 +1,10 @@
 import { CanvasRenderer, type View } from '../render/canvas.ts'
 import { appendPrim, buildLayerBatches, type SceneLayer } from '../render/scene.ts'
-import { defaultOptions, tfasRgb, type RenderOptions } from '../render/style.ts'
+import { defaultOptions, tfsRgb, type RenderOptions } from '../render/style.ts'
 import { toSvg, type SvgLayer } from '../render/svg.ts'
-import { currentLayout, filterGeom, layoutPaper, layoutPieces, modelPieces, type SourceSheet } from '../tfas/layout.ts'
-import { unionRect, type EntityInfo, type GeomBuffer, type ImageItem, type LayerColor, type Rect, type TextItem, type TfasDocument } from '../tfas/model.ts'
-import { resolveXref } from '../tfas/xref.ts'
+import { currentLayout, filterGeom, layoutPaper, layoutPieces, modelPieces, type SourceSheet } from '../tfs/layout.ts'
+import { unionRect, type EntityInfo, type GeomBuffer, type ImageItem, type LayerColor, type Rect, type TextItem, type TfsDocument } from '../tfs/model.ts'
+import { resolveXref } from '../tfs/xref.ts'
 import { entityParts, entityProperties, LAYER_GROUPS, type EntityParts } from './entities.ts'
 import { ParserClient } from './parser-client.ts'
 import { applyStaticTips, MENU_ITEM_TIPS, CMD_TIPS, OPT3D_TIPS, PANE_TIPS, sheetTip, TERM_TIPS } from './help.ts'
@@ -15,7 +15,7 @@ import { printSvg } from './print.ts'
 import { initPwa, promptInstall } from './pwa.ts'
 import { forget, forgetAll, recentList, recentPath, recentSupported, remember, reopen, walkFolder, type RecentItem } from './recent.ts'
 import { VIEW_PRESETS, Viewer3D, type Pane, type PaneKind, type SectionBox, type ViewPreset } from './viewer3d.ts'
-import type { Model3D } from '../tfas/model3d.ts'
+import type { Model3D } from '../tfs/model3d.ts'
 
 // ---------------------------------------------------------------------------
 // DOM
@@ -84,7 +84,7 @@ interface Entry {
   key: string
   name: string
   read: () => Promise<ArrayBuffer>
-  doc?: Promise<TfasDocument>
+  doc?: Promise<TfsDocument>
   model3d?: Promise<Model3D>
   /** the 3D model once built */
   model3dReady?: Model3D
@@ -121,8 +121,8 @@ function parse3d(entry: Entry): Promise<Model3D> {
   return entry.model3d
 }
 
-function parse(entry: Entry): Promise<TfasDocument> {
-  entry.doc ??= entry.read().then((buffer) => parser.request<TfasDocument>('doc', entry.name, buffer))
+function parse(entry: Entry): Promise<TfsDocument> {
+  entry.doc ??= entry.read().then((buffer) => parser.request<TfsDocument>('doc', entry.name, buffer))
   entry.doc.catch(() => (entry.doc = undefined))
   return entry.doc
 }
@@ -232,7 +232,7 @@ interface SheetView {
 
 interface Current {
   entry: Entry
-  doc: TfasDocument
+  doc: TfsDocument
   /** per document layer, external references resolved */
   sources: SourceSheet[]
   xref: ('ok' | 'missing' | null)[]
@@ -268,7 +268,7 @@ let selection: Selection | null = null
 const history: View[] = []
 
 // ---------------------------------------------------------------------------
-// 3D, elevation and section windows (Tfas: 3D 表示 / クイック断面). The plan stays the
+// 3D, elevation and section windows (元の CAD: 3D 表示 / クイック断面). The plan stays the
 // first window; the others share one WebGL scene (viewer3d.ts).
 
 type Layout = 'plan' | 'plan-3d' | '3d' | 'quad' | 'section2' | 'section4'
@@ -295,7 +295,7 @@ const planPane = $<HTMLDivElement>('pane-plan')
 const layoutSelect = $<HTMLSelectElement>('layout-select')
 const paneSync = new WeakMap<Pane, () => void>()
 /** window order and sizes (dragging the borders and title bars) */
-const paneGrid = new PaneGrid(panesEl, 'tfas-viewer.pane-split', { split: PANE_TIPS.split, head: PANE_TIPS.head })
+const paneGrid = new PaneGrid(panesEl, 't-shirt-viewer.pane-split', { split: PANE_TIPS.split, head: PANE_TIPS.head })
 paneGrid.onChange = () => {
   renderer.requestRender()
   drawOverlay()
@@ -664,14 +664,14 @@ function syncSectionUi() {
   for (const p of viewer?.panes ?? []) paneSync.get(p)?.()
 }
 
-function floorRows(doc: TfasDocument): [string, string][] {
+function floorRows(doc: TfsDocument): [string, string][] {
   const seen = new Map<string, number>()
   for (const l of doc.layers) if (l.floor && !seen.has(l.floor)) seen.set(l.floor, l.elevation ?? 0)
   if (!seen.size) return []
   return [['階 (基準高さ)', [...seen].sort((a, b) => a[1] - b[1]).map(([f, z]) => `${f} ${z.toLocaleString()}`).join(' / ')]]
 }
 
-// --- 3D in a separate browser window (Tfas: ウィンドウの位置「フレーム外」) ---------
+// --- 3D in a separate browser window (元の CAD: ウィンドウの位置「フレーム外」) ---------
 
 let popup: Window | null = null
 
@@ -683,7 +683,7 @@ function openPopup() {
   }
   // 3D details for the property panel
   if (!current.entry.part) void parse3d(current.entry).then(() => renderProps(), () => {})
-  popup = window.open(new URL('view3d.html', location.href).href, 'tfas-viewer-3d', 'width=1100,height=760')
+  popup = window.open(new URL('view3d.html', location.href).href, 't-shirt-viewer-3d', 'width=1100,height=760')
   if (!popup) alert('別ウィンドウを開けませんでした (ブラウザーのポップアップブロックを確認してください)')
 }
 
@@ -788,7 +788,7 @@ async function openEntry(entry: Entry) {
     renderInfo()
     renderLayers()
     renderLayouts()
-    // Tfas opens a drawing on the layout that holds the current sheet; the 3D windows show the model
+    // The CAD opens a drawing on the layout that holds the current sheet; the 3D windows show the model
     showView(layout === 'plan' ? currentLayout(doc) : null, cur >= 0 ? cur : undefined)
     document.title = `${entry.name} - T-Shirt Viewer`
     docTitle.textContent = entry.name
@@ -805,7 +805,7 @@ async function openEntry(entry: Entry) {
 
 /** Error text for users new to CAD (keeps the technical detail at the end). */
 function friendlyError(e: Error): string {
-  if (/マジック|TFAS ファイルではありません/.test(e.message)) return `Tfas の図面ファイル (.tfs) ではないか、ファイルが壊れている可能性があります。\n(詳細: ${e.message})`
+  if (/シグネチャが一致しない/.test(e.message)) return `.tfs 形式の図面ファイル ではないか、ファイルが壊れている可能性があります。\n(詳細: ${e.message})`
   return `ファイルの形式に対応していないか、壊れている可能性があります。\n(詳細: ${e.message})`
 }
 
@@ -879,9 +879,9 @@ function buildScene(c: Current): SceneLayer[] {
 }
 
 // ---------------------------------------------------------------------------
-// レイヤ (Tfas の図形属性: 通り芯・壁・給水管…) visibility
+// レイヤ (元の CAD の図形属性: 通り芯・壁・給水管…) visibility
 
-function countLayers(doc: TfasDocument): Map<number, number> {
+function countLayers(doc: TfsDocument): Map<number, number> {
   const n = new Map<number, number>()
   for (const l of doc.layers) {
     if (l.xref) continue
@@ -1024,7 +1024,7 @@ function renderLayers() {
     const gn = document.createElement('span')
     gn.className = 'name'
     gn.textContent = `${gname} (${attrs.length})`
-    head.title = `レイヤグループ「${gname}」\nTfas はレイヤを 基本・建築・電気・空調・衛生 などのグループに分けて管理します。チェックでグループ内のレイヤをまとめて表示・非表示にします。`
+    head.title = `レイヤグループ「${gname}」\n元の CAD はレイヤを 基本・建築・電気・空調・衛生 などのグループに分けて管理します。チェックでグループ内のレイヤをまとめて表示・非表示にします。`
     head.append(gcb, gn)
     items.push(head)
     for (const a of attrs) {
@@ -1073,7 +1073,7 @@ function renderLayers() {
   layerList.replaceChildren(...items)
 }
 
-const MONO_HINT = 'この図面は多くのシートが「単色指定」(1 色で表示する設定) か「グレー表示」で保存されているため、Tfas と同じく白・灰色で表示しています。ツールバーの「単色指定」を外すと、図形の本来の色で表示します。'
+const MONO_HINT = 'この図面は多くのシートが「単色指定」(1 色で表示する設定) か「グレー表示」で保存されているため、元の CAD と同じく白・灰色で表示しています。ツールバーの「単色指定」を外すと、図形の本来の色で表示します。'
 
 /** Share of the shown figures drawn in a sheet's single color or gray. */
 function monoShare(): number {
@@ -1109,7 +1109,7 @@ function visibleExtents(): Rect | null {
 
 function fitInitial() {
   if (!current) return
-  // like Tfas' own preview: the paper area, unless nothing visible is drawn there
+  // like the CAD's own preview: the paper area, unless nothing visible is drawn there
   const ext = visibleExtents()
   const p = current.paper
   if (ext && !(ext.x0 <= p.x1 && p.x0 <= ext.x1 && ext.y0 <= p.y1 && p.y0 <= ext.y1)) renderer.fit(ext)
@@ -1332,7 +1332,7 @@ function clearSelection() {
 }
 
 function colorCss(n: number): string {
-  const rgb = tfasRgb(n)
+  const rgb = tfsRgb(n)
   return rgb === null ? 'transparent' : `#${(rgb | (1 << 24)).toString(16).slice(1)}`
 }
 
@@ -1638,7 +1638,7 @@ function renderInfo() {
   const images = doc.layers.reduce((a, l) => a + l.images.length, 0)
   const rows: [string, string][] = [
     ['ファイル', entry.name],
-    ['形式', `Tfas ${doc.version}`],
+    ['形式', `.tfs ${doc.version}`],
     ['縮尺', `1/${doc.scale}`],
     ['用紙', paperName(pw, ph)],
     ['シート', `${doc.layers.filter((l) => l.visible).length} / ${doc.layers.length} 表示`],
@@ -2091,7 +2091,7 @@ document.querySelectorAll<HTMLInputElement>('[data-opt]').forEach((el) =>
 )
 // screen areas that can be hidden: body class no-<name> (remembered per browser)
 const PANELS = ['toolbar', 'side', 'props', 'sheetbar', 'status'] as const
-const PANEL_KEY = 'tfas-viewer.hidden-panels'
+const PANEL_KEY = 't-shirt-viewer.hidden-panels'
 function setPanel(name: string, on: boolean) {
   document.body.classList.toggle(`no-${name}`, !on)
   syncPanelChecks()
@@ -2444,7 +2444,7 @@ window.addEventListener('keydown', (e) => {
     run('search')
     return
   }
-  // Ctrl+PageUp/Down as in Tfas (browsers may keep it for tab switching: Alt+PageUp/Down works too)
+  // Ctrl+PageUp/Down as in the CAD (browsers may keep it for tab switching: Alt+PageUp/Down works too)
   if ((ctrl || e.altKey) && (e.key === 'PageUp' || e.key === 'PageDown') && current) {
     e.preventDefault()
     const g = current.groups
@@ -2587,7 +2587,7 @@ type FilePickerWindow = Window & {
   showOpenFilePicker(o: object): Promise<FileSystemFileHandle[]>
   showDirectoryPicker(o: object): Promise<FileSystemDirectoryHandle>
 }
-const ACCEPT = [{ description: 'Tfas の図面・部品ライブラリ', accept: { 'application/octet-stream': ['.tfs', '.ncp', '.mdb', '.usr'] } }]
+const ACCEPT = [{ description: '.tfs 図面・部品ライブラリ', accept: { 'application/octet-stream': ['.tfs', '.ncp', '.mdb', '.usr'] } }]
 
 /** ［開く］: the browser's file dialog with handles where available (remembered), else the file input. */
 async function pickFiles() {
@@ -2690,7 +2690,7 @@ planPane.querySelector<HTMLElement>('.pane-name')!.title = PANE_TIPS.plan
 // expose internals for debugging in development builds
 if (import.meta.env.DEV)
   Object.assign(window, {
-    __tfas: {
+    __app: {
       renderer,
       get current() {
         return current

@@ -1,4 +1,4 @@
-// Tfas document reader: container -> layers -> entities -> primitives.
+// Document reader: container -> layers -> entities -> primitives.
 //
 // Section 1: document settings (record 1: scale, record 2: paper rect) and tables.
 // Section 4: one zlib block per layer. Inside a block:
@@ -13,7 +13,7 @@
 
 import { dataView, decodeSjis, inflate, isCompressedRecord, openContainer, records, sectionBytes } from './container.ts'
 import { decodeGeometry, decodeText, GeomBuilder, Kind, primFlags, readHeader } from './geometry.ts'
-import { emptyRect, isEmptyRect, PrimFlag, unionRect, type EntityInfo, type ImageItem, type AttributeInfo, type Layer, type LayoutInfo, type Rect, type SheetLayout, type Style, type TextFunction, type TextItem, type TfasDocument, type XrefInfo } from './model.ts'
+import { emptyRect, isEmptyRect, PrimFlag, unionRect, type EntityInfo, type ImageItem, type AttributeInfo, type Layer, type LayoutInfo, type Rect, type SheetLayout, type Style, type TextFunction, type TextItem, type TfsDocument, type XrefInfo } from './model.ts'
 import { decodeTagged, isBytes, isList, type Tagged } from './tagged.ts'
 import { readOleObject } from './ole.ts'
 import { readTables } from './tables.ts'
@@ -24,7 +24,7 @@ export interface ReadOptions {
   keepHidden?: boolean
 }
 
-export function readTfas(data: Uint8Array, fileName = '', opts: ReadOptions = {}): TfasDocument {
+export function readTfs(data: Uint8Array, fileName = '', opts: ReadOptions = {}): TfsDocument {
   const t0 = performance.now()
   const c = openContainer(data)
   const warnings: string[] = []
@@ -107,7 +107,7 @@ export function readTfas(data: Uint8Array, fileName = '', opts: ReadOptions = {}
               if (b.length >= 9) {
                 const v = dataView(b)
                 if (v.getUint32(0, true) === 1 && v.getUint32(4, true) > 0) layer.scale = v.getUint32(4, true)
-                // byte 8: shown, byte 11: current layer (always shown by Tfas)
+                // byte 8: shown, byte 11: current layer (always shown by the CAD)
                 layer.visible = b[8] !== 0 || (b.length > 11 && b[11] !== 0)
                 layer.current = b.length > 11 && b[11] !== 0
                 layer.editable = b.length > 10 && b[10] !== 0
@@ -213,7 +213,7 @@ export function readTfas(data: Uint8Array, fileName = '', opts: ReadOptions = {}
               }
               // Display color: the entity's own color; inherited colors (bit 31) follow the
               // sheet color, or the layer (attribute) color for layer group 1. An earlier
-              // rule that preferred layer colors for some groups was disproved by the official Tfas
+              // rule that preferred layer colors for some groups was disproved by the CAD's official
               // manual (a red 分割枠 on a white layer) and by preview statistics.
               const attrColor = attrColors.get(h.attr)
               let color = h.color
@@ -388,7 +388,7 @@ function readXref(b: Uint8Array): XrefInfo | null {
   return { directory: decodeSjis(items[0]), fileName, layerName: decodeSjis(items[5]) }
 }
 
-export function documentExtents(doc: TfasDocument, onlyVisible = true): Rect | null {
+export function documentExtents(doc: TfsDocument, onlyVisible = true): Rect | null {
   let r = emptyRect()
   for (const l of doc.layers) if (l.bbox && (!onlyVisible || l.visible)) r = unionRect(r, l.bbox)
   return isEmptyRect(r) ? null : r

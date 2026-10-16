@@ -2,8 +2,8 @@
 // During interaction the last full frame is reused as a transformed bitmap and a full
 // redraw follows once the interaction pauses.
 
-import { layoutText } from '../tfas/geometry.ts'
-import { intersects, PrimFlag, type ImageItem, type LayerColor, type Rect, type TextItem, type TfasDocument } from '../tfas/model.ts'
+import { layoutText } from '../tfs/geometry.ts'
+import { intersects, PrimFlag, type ImageItem, type LayerColor, type Rect, type TextItem, type TfsDocument } from '../tfs/model.ts'
 import { imageMatrix } from './images.ts'
 import type { SceneLayer } from './scene.ts'
 import { backgroundColor, dashPattern, fontFamily, layerStroke, linePx, type RenderOptions } from './style.ts'
@@ -23,7 +23,7 @@ export class CanvasRenderer {
   private snapView: View | null = null
   private fullTimer = 0
   private frame = 0
-  doc: TfasDocument | null = null
+  doc: TfsDocument | null = null
   layers: SceneLayer[] = []
   visible: boolean[] = []
   options: RenderOptions
@@ -42,7 +42,7 @@ export class CanvasRenderer {
     this.options = options
   }
 
-  setScene(doc: TfasDocument, layers: SceneLayer[], visible: boolean[]) {
+  setScene(doc: TfsDocument, layers: SceneLayer[], visible: boolean[]) {
     this.doc = doc
     this.layers = layers
     this.visible = visible
@@ -245,7 +245,7 @@ export class CanvasRenderer {
         ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f)
         ctx.imageSmoothingQuality = 'high'
         ctx.drawImage(bm, 0, 0)
-        // Tfas outlines pictures and OLE objects with a thin gray frame
+        // The CAD outlines pictures and OLE objects with a thin gray frame
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.strokeStyle = '#808080'
         ctx.lineWidth = dpr
@@ -272,10 +272,10 @@ export class CanvasRenderer {
     }
   }
 
-  private drawSheets(doc: TfasDocument, ex: (x: number) => number, ey: (y: number) => number, dpr: number) {
+  private drawSheets(doc: TfsDocument, ex: (x: number) => number, ey: (y: number) => number, dpr: number) {
     const ctx = this.ctx
     ctx.setTransform(1, 0, 0, 1, 0, 0)
-    // paper outline, drawn like Tfas (yellow)
+    // paper outline, drawn like the CAD (yellow)
     const r = this.paper ?? doc.paper
     ctx.strokeStyle = this.options.background === 'white' ? '#b8a000' : '#c8c800'
     ctx.lineWidth = dpr
@@ -283,7 +283,7 @@ export class CanvasRenderer {
     ctx.strokeRect(ex(r.x0), ey(r.y1), ex(r.x1) - ex(r.x0), ey(r.y0) - ey(r.y1))
   }
 
-  private drawTexts(doc: TfasDocument, lc: LayerColor, texts: TextItem[], viewRect: Rect, ex: (x: number) => number, ey: (y: number) => number, dpr: number) {
+  private drawTexts(doc: TfsDocument, lc: LayerColor, texts: TextItem[], viewRect: Rect, ex: (x: number) => number, ey: (y: number) => number, dpr: number) {
     const ctx = this.ctx
     const z = this.view.zoom * dpr
     ctx.textBaseline = 'ideographic'

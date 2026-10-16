@@ -2,7 +2,7 @@
 // title-block frame). The referenced file's paper rectangle is mapped onto the
 // referencing file's paper rectangle.
 
-import { Prim, type EntityInfo, type GeomBuffer, type Layer, type Rect, type TextItem, type TfasDocument } from './model.ts'
+import { Prim, type EntityInfo, type GeomBuffer, type Layer, type Rect, type TextItem, type TfsDocument } from './model.ts'
 
 export interface ResolvedXref {
   geom: GeomBuffer
@@ -12,7 +12,7 @@ export interface ResolvedXref {
   entities: EntityInfo[]
 }
 
-export function resolveXref(target: TfasDocument, layer: Layer, source: TfasDocument): ResolvedXref | null {
+export function resolveXref(target: TfsDocument, layer: Layer, source: TfsDocument): ResolvedXref | null {
   const want = layer.xref?.layerName ?? ''
   const src = source.layers.find((l) => l.name === want && !l.xref) ?? (want ? null : source.layers.find((l) => l.visible && !l.xref))
   if (!src) return null

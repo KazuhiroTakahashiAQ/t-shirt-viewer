@@ -24,7 +24,7 @@ function publicFiles(dir: string): string[] {
  */
 function precache(): Plugin {
   return {
-    name: 'tfas-precache',
+    name: 'precache-sw',
     apply: 'build',
     enforce: 'post',
     generateBundle(_options, bundle) {

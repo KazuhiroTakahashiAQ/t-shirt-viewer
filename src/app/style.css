@@ -1,4 +1,4 @@
-/* Desktop-CAD style chrome (light gray, like Tfas on Windows) around a black drawing area. */
+/* Desktop-CAD style chrome (light gray, like the CAD on Windows) around a black drawing area. */
 :root {
   --chrome: #f0f0f0;
   --chrome-2: #e6e6e6;
@@ -900,7 +900,7 @@ body.dragover .empty {
   bottom: 10px;
 }
 
-/* sheet tabs (bottom-left of the drawing window, as in Tfas) */
+/* sheet tabs (bottom-left of the drawing window, as in the CAD) */
 .sheetbar {
   flex: none;
   background: var(--chrome);

@@ -1,4 +1,4 @@
-// 3D model of a drawing, built (like Tfas' 3D 表示) from data stored with each object:
+// 3D model of a drawing, built (like the CAD's 3D 表示) from data stored with each object:
 //
 // - Ducts and pipes (0x500 空調, 0x600 衛生, 0x480): a hidden 3D polyline holds the center
 //   line. Straight runs (attribute 0x504 length > 0) store the path; fittings, valves and
@@ -12,7 +12,7 @@
 //   (slabs) use the base point as their first vertex: it then lies outside the others.
 // - Valves (codes ZVLV…): the hidden polyline is [center, end 1, end 2, handle top], and a
 //   hidden child (0x508) holds plan outlines tagged by attribute 0x515: 0x10 / 0x11 the
-//   connection ends, 0x20 the handle. These are the valve dimensions Tfas registers
+//   connection ends, 0x20 the handle. These are the valve dimensions the CAD registers
 //   (L1, L2, H1 from the polyline; D1, D2 and the handle diameter H2 from the outlines).
 // - Duct equipment boxes (DSNTSYO… silencer chambers, DSNTBOX… boxes): 0x512 = W, D, H and
 //   the polyline [center, center + W/2 along the width, center + H/2 along the height].
@@ -48,7 +48,7 @@ export interface Object3D {
   /** kind of the object itself (may be nested in a group) */
   kind: number
   category: Category3D
-  /** Tfas color number */
+  /** drawing color number */
   color: number
   /** レイヤ (図形属性 id, as GeomBuffer.attr) */
   attr: number
@@ -441,7 +441,7 @@ export function read3d(data: Uint8Array): Model3D {
   }
 
   /**
-   * Valve from its registered dimensions (Tfas バルブ: D1, L1, L2, H1 ハンドル高さ, H2 ハンドル径):
+   * Valve from its registered dimensions (バルブ: D1, L1, L2, H1 ハンドル高さ, H2 ハンドル径):
    * body cylinders from the center to both ends, a stem to the handle and the handle disc.
    * The stem and disc thickness are not stored; they are drawn thin.
    */
@@ -684,7 +684,7 @@ export function read3d(data: Uint8Array): Model3D {
       // alternative: the shape estimated from the part's views (5 面図)
       const { hull, why } = H > 0 ? hullOf(f.partCode, b) : { hull: null, why: '高さの情報がない' }
       if (hull) {
-        beginAlt([['3D 形状', '機器・部品 (5 面図から推定した形。Tfas の 3D 表示とは異なる)'], ['推定に使った図', hull.used.map((v) => VIEW_NAMES[v]).join('・')], ...rows])
+        beginAlt([['3D 形状', '機器・部品 (5 面図から推定した形。元の CAD の 3D 表示とは異なる)'], ['推定に使った図', hull.used.map((v) => VIEW_NAMES[v]).join('・')], ...rows])
         const t = hull.tri
         const at = (i: number) => add(o, add(mul(ex, t[i] * sx), add(mul(ey, t[i + 1] * sy), mul(ez, t[i + 2] * sz))))
         for (let i = 0; i + 8 < t.length; i += 9) t3(at(i), at(i + 3), at(i + 6))

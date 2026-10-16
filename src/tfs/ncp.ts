@@ -1,8 +1,8 @@
-// Tfas parts library (.NCP, "Tfas 部品データファイル" distributed by manufacturers and
+// Parts library (.NCP, "部品データファイル" distributed by manufacturers and
 // imported through サブセットライブラリのインポート).
 //
 // File layout (little endian):
-//   0x00  "TFAS"
+//   0x00  signature: the bytes 54 46 41 53
 //   0x08  u32 format (0x16)
 //   0x1c  u32 (next free id?)
 //   0x40  u32 file size, u32 used entries, u32 entry capacity, u32 index offset (0x58),
@@ -24,7 +24,7 @@
 
 import { dataView, decodeSjis, records } from './container.ts'
 import { decodeGeometry, decodeText, GeomBuilder, Kind, primFlags, readHeader } from './geometry.ts'
-import { isEmptyRect, PrimFlag, unionRect, type EntityInfo, type GeomBuffer, type Layer, type Rect, type Style, type TextItem, type TfasDocument } from './model.ts'
+import { isEmptyRect, PrimFlag, unionRect, type EntityInfo, type GeomBuffer, type Layer, type Rect, type Style, type TextItem, type TfsDocument } from './model.ts'
 import { decodeTagged, isBytes } from './tagged.ts'
 
 export interface NcpEntry {
@@ -94,7 +94,7 @@ export function isNcp(data: Uint8Array): boolean {
 
 /** Parse the index only; drawings are decoded on demand with readNcpEntry. */
 export function openNcp(data: Uint8Array): NcpLibrary {
-  if (!isNcp(data)) throw new NcpFormatError('Tfas 部品データファイル (.NCP) ではありません')
+  if (!isNcp(data)) throw new NcpFormatError('部品データファイル (.NCP) ではありません')
   const v = dataView(data)
   const capacity = v.getUint32(0x48, true)
   const indexAt = v.getUint32(0x4c, true)
@@ -238,7 +238,7 @@ export function readNcpEntry(lib: NcpLibrary, entry: NcpEntry): PartDrawing {
 }
 
 /** Wrap a part drawing as a one-layer document so the regular renderers can draw it. */
-export function partDocument(d: PartDrawing): TfasDocument {
+export function partDocument(d: PartDrawing): TfsDocument {
   const bbox = d.bbox ?? { x0: -500, y0: -500, x1: 500, y1: 500 }
   const layer: Layer = {
     index: 0,

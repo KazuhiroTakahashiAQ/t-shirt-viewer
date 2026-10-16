@@ -80,7 +80,7 @@ export class GeomBuilder {
   private clen = 0
   /** entity assigned to the primitives that follow */
   entity = 0
-  /** Tfas レイヤ (attribute id) assigned to the primitives that follow */
+  /** レイヤ (attribute id) assigned to the primitives that follow */
   attr = 0
   bbox: Rect = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }
 
